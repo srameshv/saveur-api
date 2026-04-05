@@ -1,0 +1,35 @@
+# Environment variables — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Alembic
+migrations/versions/*.pyc
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# Project docs — keep local only
+CLAUDE.md
+OAUTH_LEARNINGS.md
+
+# Claude Code local config
+.claude/

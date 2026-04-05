@@ -12,6 +12,7 @@ from database import get_db
 from deps import get_current_user
 from models.places_cache import PlacesCache
 from models.user import User
+from rate_limiter import PLACES_SEARCH_PER_DAY, user_limiter
 
 router = APIRouter(prefix="/places", tags=["places"])
 limiter = Limiter(key_func=get_remote_address)
@@ -108,6 +109,10 @@ def search_restaurants(
 ):
     # Parse preferences — use query params if provided, else fall back to user profile
     prefs = current_user.preferences
+    if not user_limiter.is_allowed(f"places:{current_user.id}", PLACES_SEARCH_PER_DAY, 86400):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail=f"Daily search limit ({PLACES_SEARCH_PER_DAY}) reached. Try again tomorrow.")
+
     cuisine_list = [c.strip()[:50] for c in cuisines.split(",")][:10] if cuisines else (prefs.cuisines if prefs else [])
     diet_list = [d.strip()[:50] for d in diets.split(",")][:10] if diets else (prefs.diets if prefs else [])
 

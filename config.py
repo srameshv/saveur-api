@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     supabase_key: str
     anthropic_api_key: str
     google_places_api: str
+    admin_token: str
+    frontend_url: str = ""
 
     model_config = {"env_file": ".env"}
 

@@ -12,6 +12,7 @@ from config import settings
 from database import get_db
 from deps import get_current_user
 from models.group import GroupMember
+from rate_limiter import AI_RECS_PER_DAY, user_limiter
 from models.recommendation import AiRecommendation
 from models.session import DinnerSession, SessionRestaurant
 from models.user import User, UserPreferences
@@ -92,6 +93,10 @@ def get_recommendation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    if not user_limiter.is_allowed(f"recs:{current_user.id}", AI_RECS_PER_DAY, 86400):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail=f"Daily AI recommendation limit ({AI_RECS_PER_DAY}) reached. Try again tomorrow.")
+
     cached = _get_cached(payload.session_id, payload.city, db)
     if cached:
         return cached

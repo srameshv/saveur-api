@@ -30,6 +30,7 @@ logs/
 # Project docs — keep local only
 CLAUDE.md
 OAUTH_LEARNINGS.md
+WEB_APP_SECURITY_FRAMEWORK.md
 
 # Claude Code local config
 .claude/

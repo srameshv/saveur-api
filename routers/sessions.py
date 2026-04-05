@@ -9,6 +9,7 @@ from deps import get_current_user
 from models.group import GroupMember
 from models.session import DinnerSession, SessionRestaurant, SessionVote
 from models.user import User
+from rate_limiter import MAX_RESTAURANTS_PER_SESSION
 from schemas.session import (
     AddRestaurantRequest,
     RestaurantResult,
@@ -189,6 +190,13 @@ def add_restaurant(
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     _assert_group_member(session.group_id, current_user.id, db)
+
+    restaurant_count = db.query(SessionRestaurant).filter(
+        SessionRestaurant.session_id == session_id
+    ).count()
+    if restaurant_count >= MAX_RESTAURANTS_PER_SESSION:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail=f"Session restaurant limit ({MAX_RESTAURANTS_PER_SESSION}) reached.")
 
     duplicate = (
         db.query(SessionRestaurant)

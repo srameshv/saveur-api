@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from database import get_db
-from deps import get_current_user
+from deps import get_current_user, get_supabase
 from models.recommendation import AiRecommendation
 from models.user import User, UserPreferences
 from schemas.user import PreferencesOut, PreferencesUpdate, UserOut, UserUpdate
@@ -62,6 +62,22 @@ def update_preferences(
     db.commit()
 
     return prefs
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Delete from Supabase Auth
+    try:
+        get_supabase().auth.admin.delete_user(str(current_user.id))
+    except Exception:
+        pass  # Continue even if Supabase deletion fails
+
+    # Delete local user record (cascades to preferences, votes, etc.)
+    db.delete(current_user)
+    db.commit()
 
 
 @router.get("/{user_id}", response_model=UserOut)

@@ -8,6 +8,7 @@ from database import get_db
 from deps import get_current_user
 from models.group import Group, GroupMember, RoleEnum
 from models.user import User
+from rate_limiter import MAX_GROUPS_PER_USER
 from schemas.group import GroupCreate, GroupMemberOut, GroupOut, JoinGroupRequest
 
 router = APIRouter(prefix="/groups", tags=["groups"])
@@ -34,6 +35,14 @@ def create_group(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    user_group_count = db.query(GroupMember).filter(
+        GroupMember.user_id == current_user.id,
+        GroupMember.role == RoleEnum.admin,
+    ).count()
+    if user_group_count >= MAX_GROUPS_PER_USER:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                            detail=f"Maximum group limit ({MAX_GROUPS_PER_USER}) reached.")
+
     invite_code = _generate_invite_code()
     while db.query(Group).filter(Group.invite_code == invite_code).first():
         invite_code = _generate_invite_code()

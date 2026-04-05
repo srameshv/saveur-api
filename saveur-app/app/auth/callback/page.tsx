@@ -13,7 +13,7 @@ export default function AuthCallbackPage() {
     // Redirect to login if auth takes too long
     const timeout = setTimeout(() => {
       router.replace('/login')
-    }, 10000)
+    }, 30000)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {

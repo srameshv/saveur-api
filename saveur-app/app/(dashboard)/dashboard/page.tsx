@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     groupsApi.list()
@@ -16,9 +17,16 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const filtered = search.trim()
+    ? groups.filter((g) =>
+        g.name.toLowerCase().includes(search.toLowerCase()) ||
+        (g.description ?? '').toLowerCase().includes(search.toLowerCase())
+      )
+    : groups
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-stone-900">Your Groups</h1>
         <div className="flex gap-3">
           <Link
@@ -36,6 +44,16 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {!loading && groups.length > 0 && (
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search groups…"
+          className="w-full mb-6 px-4 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+        />
+      )}
+
       {loading && <p className="text-stone-500">Loading…</p>}
       {error && <p className="text-red-500">{error}</p>}
 
@@ -46,8 +64,12 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {!loading && groups.length > 0 && filtered.length === 0 && (
+        <p className="text-center text-stone-400 py-12 text-sm">No groups match your search.</p>
+      )}
+
       <div className="grid gap-4">
-        {groups.map((g) => (
+        {filtered.map((g) => (
           <Link
             key={g.id}
             href={`/groups/${g.id}`}

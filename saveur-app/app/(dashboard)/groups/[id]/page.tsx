@@ -4,15 +4,18 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { groups, sessions as sessionsApi, type Group, type DinnerSession } from '@/lib/api'
+import { useAuthStore } from '@/store/auth'
 
 export default function GroupPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { user } = useAuthStore()
 
   const [group, setGroup] = useState<Group | null>(null)
   const [sessions, setSessions] = useState<DinnerSession[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [deleting, setDeleting] = useState(false)
 
   // new session form
   const [showForm, setShowForm] = useState(false)
@@ -43,6 +46,18 @@ export default function GroupPage() {
     }
   }
 
+  async function handleDeleteGroup() {
+    if (!confirm('Delete this group? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      await groups.delete(id)
+      router.replace('/dashboard')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to delete group')
+      setDeleting(false)
+    }
+  }
+
   if (loading) return <p className="text-stone-500">Loading…</p>
   if (error) return <p className="text-red-500">{error}</p>
   if (!group) return null
@@ -55,9 +70,20 @@ export default function GroupPage() {
 
       <div className="flex items-start justify-between mb-2">
         <h1 className="text-2xl font-bold text-stone-900">{group.name}</h1>
-        <span className="text-xs text-stone-400 font-mono bg-stone-100 px-2 py-1 rounded mt-1">
-          {group.invite_code}
-        </span>
+        <div className="flex items-center gap-2 mt-1">
+          <span className="text-xs text-stone-400 font-mono bg-stone-100 px-2 py-1 rounded">
+            {group.invite_code}
+          </span>
+          {group.created_by === user?.id && (
+            <button
+              onClick={handleDeleteGroup}
+              disabled={deleting}
+              className="text-xs px-3 py-1 rounded border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors"
+            >
+              {deleting ? 'Deleting…' : 'Delete group'}
+            </button>
+          )}
+        </div>
       </div>
       {group.description && <p className="text-stone-500 mb-6">{group.description}</p>}
 

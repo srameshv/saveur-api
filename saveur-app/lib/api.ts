@@ -100,6 +100,7 @@ export const groups = {
   members: (id: string) => request<GroupMember[]>(`/groups/${id}/members`),
   join: (invite_code: string) =>
     request<GroupMember>('/groups/join', { method: 'POST', body: JSON.stringify({ invite_code }) }),
+  delete: (id: string) => request<void>(`/groups/${id}`, { method: 'DELETE' }),
 }
 
 // --- Sessions ---

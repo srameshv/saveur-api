@@ -19,7 +19,7 @@ export default function AuthCallbackPage() {
       if (session) {
         clearTimeout(timeout)
         setAuth(session.access_token, session.user.id)
-        router.replace('/dashboard')
+        router.replace('/discover')
       }
     })
 
@@ -27,7 +27,7 @@ export default function AuthCallbackPage() {
       if (session) {
         clearTimeout(timeout)
         setAuth(session.access_token, session.user.id)
-        router.replace('/dashboard')
+        router.replace('/discover')
       }
     })
 
